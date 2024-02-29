@@ -1,3 +1,4 @@
+import java.text.SimpleDateFormat
 
 plugins {
     id "java"
@@ -91,5 +92,8 @@ publishing {
 tasks.publish.dependsOn build
 
 static String getVersionSuffix() {
-    return ""
+    if (System.getenv("IS_PUBLICATION") != null)
+        return new SimpleDateFormat("-yyyy-MM-dd").format(new Date())
+
+    return "-LOCAL"
 }
