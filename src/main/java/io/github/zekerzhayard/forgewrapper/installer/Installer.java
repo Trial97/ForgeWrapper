@@ -24,23 +24,23 @@ import net.minecraftforge.installer.json.Version;
 
 public class Installer {
     private static InstallV1Wrapper wrapper;
-    private static InstallV1Wrapper getWrapper(File librariesDir, boolean skipHashCheck) {
+    private static InstallV1Wrapper getWrapper(File librariesDir) {
         if (wrapper == null) {
-            wrapper = new InstallV1Wrapper(Util.loadInstallProfile(), librariesDir, skipHashCheck);
+            wrapper = new InstallV1Wrapper(Util.loadInstallProfile(), librariesDir);
         }
         return wrapper;
     }
 
-    public static Map<String, Object> getData(File librariesDir, boolean skipHashCheck) {
+    public static Map<String, Object> getData(File librariesDir) {
         Map<String, Object> data = new HashMap<>();
-        Version0 version = Version0.loadVersion(getWrapper(librariesDir, skipHashCheck));
+        Version0 version = Version0.loadVersion(getWrapper(librariesDir));
         data.put("mainClass", version.getMainClass());
         data.put("jvmArgs", version.getArguments().getJvm());
         data.put("extraLibraries", getExtraLibraries(version));
         return data;
     }
 
-    public static boolean install(File libraryDir, File minecraftJar, File installerJar) throws Throwable {
+    public static boolean install(File libraryDir, File minecraftJar, File installerJar, boolean skipHashCheck) throws Throwable {
         ProgressCallback monitor = ProgressCallback.withOutputs(System.out);
         if (System.getProperty("java.net.preferIPv4Stack") == null) {
             System.setProperty("java.net.preferIPv4Stack", "true");
@@ -53,6 +53,10 @@ public class Installer {
         monitor.message("Current Time: " + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()));
 
         // MinecraftForge has removed all old installers since 2024/2/27, but they still exist in NeoForge.
+        if (skipHashCheck) {
+            CustomPostProcessors processors = new CustomPostProcessors(wrapper, true, monitor, skipHashCheck);
+            return processors.process(libraryDir, minecraftJar, libraryDir.getParentFile(), installerJar) != null;
+        }
         PostProcessors processors = new PostProcessors(wrapper, true, monitor);
         Method processMethod = PostProcessors.class.getMethod("process", File.class, File.class, File.class, File.class);
         if (boolean.class.equals(processMethod.getReturnType())) {
@@ -79,20 +83,15 @@ public class Installer {
     public static class InstallV1Wrapper extends InstallV1 {
         protected Map<String, List<Processor>> processors = new HashMap<>();
         protected File librariesDir;
-        protected boolean skipHashCheck = false;
 
-        public InstallV1Wrapper(InstallV1 v1, File librariesDir, boolean skipHashCheck) {
+        public InstallV1Wrapper(InstallV1 v1, File librariesDir) {
             super(v1);
             this.serverJarPath = v1.getServerJarPath();
             this.librariesDir = librariesDir;
-            this.skipHashCheck = skipHashCheck;
         }
 
         @Override
         public List<Processor> getProcessors(String side) {
-            if (this.skipHashCheck){
-                 return new ArrayList<>();
-            }
             List<Processor> processor = this.processors.get(side);
             if (processor == null) {
                 checkProcessorFiles(processor = super.getProcessors(side), super.getData("client".equals(side)), this.librariesDir);

@@ -53,7 +53,7 @@ public class Main {
         }, ModuleUtil.getPlatformClassLoader())) {
             Class<?> installer = ucl.loadClass("io.github.zekerzhayard.forgewrapper.installer.Installer");
 
-            Map<String, Object> data = (Map<String, Object>) installer.getMethod("getData", File.class, boolean.class).invoke(null, detector.getLibraryDir().toFile(), skipHashCheck);
+            Map<String, Object> data = (Map<String, Object>) installer.getMethod("getData", File.class, boolean.class).invoke(null, detector.getLibraryDir().toFile());
             try {
                 Bootstrap.bootstrap((String[]) data.get("jvmArgs"), detector.getMinecraftJar(mcVersion).getFileName().toString(), detector.getLibraryDir().toAbsolutePath().toString());
             } catch (Throwable t) {
@@ -61,7 +61,7 @@ public class Main {
                 t.printStackTrace();
             }
 
-            if (!((boolean) installer.getMethod("install", File.class, File.class, File.class).invoke(null, detector.getLibraryDir().toFile(), minecraftJar.toFile(), installerJar.toFile()))) {
+            if (!((boolean) installer.getMethod("install", File.class, File.class, File.class).invoke(null, detector.getLibraryDir().toFile(), minecraftJar.toFile(), installerJar.toFile(), skipHashCheck))) {
                 return;
             }
 
