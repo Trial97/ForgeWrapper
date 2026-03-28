@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import io.github.zekerzhayard.forgewrapper.installer.detector.DetectorLoader;
 import io.github.zekerzhayard.forgewrapper.installer.detector.IFileDetector;
+import io.github.zekerzhayard.forgewrapper.installer.util.ChildFirstClassLoader;
 import io.github.zekerzhayard.forgewrapper.installer.util.ModuleUtil;
 
 public class Main {
@@ -62,8 +63,11 @@ public class Main {
                 return;
             }
 
-            ModuleUtil.setupClassPath(detector.getLibraryDir(), (List<String>) data.get("extraLibraries"));
-            Class<?> mainClass = ModuleUtil.setupBootstrapLauncher(Class.forName((String) data.get("mainClass")));
+            ChildFirstClassLoader childFirstLoader = ChildFirstClassLoader.createWithClassPath(
+                    detector.getLibraryDir(), (List<String>) data.get("extraLibraries"));
+            Thread.currentThread().setContextClassLoader(childFirstLoader);
+            Class<?> mainClass = ModuleUtil.setupBootstrapLauncher(
+                    childFirstLoader.loadClass((String) data.get("mainClass")));
             mainClass.getMethod("main", String[].class).invoke(null, new Object[] {args});
         }
     }

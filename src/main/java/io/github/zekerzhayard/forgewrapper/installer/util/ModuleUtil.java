@@ -20,14 +20,6 @@ public class ModuleUtil {
         // nothing to do with Java 8
     }
 
-    public static void setupClassPath(Path libraryDir, List<String> paths) throws Throwable {
-        Method addURLMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-        addURLMethod.setAccessible(true);
-        for (String path : paths) {
-            addURLMethod.invoke(ClassLoader.getSystemClassLoader(), libraryDir.resolve(path).toUri().toURL());
-        }
-    }
-
     public static Class<?> setupBootstrapLauncher(Class<?> mainClass) {
         // nothing to do with Java 8
         return mainClass;

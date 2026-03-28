@@ -192,15 +192,6 @@ public class ModuleUtil {
         }
     }
 
-    public static void setupClassPath(Path libraryDir, List<String> paths) throws Throwable {
-        Class<?> urlClassPathClass = Class.forName("jdk.internal.loader.URLClassPath");
-        Object ucp = IMPL_LOOKUP.findGetter(Class.forName("jdk.internal.loader.BuiltinClassLoader"), "ucp", urlClassPathClass).invokeWithArguments(ClassLoader.getSystemClassLoader());
-        MethodHandle addURLMH = IMPL_LOOKUP.findVirtual(urlClassPathClass, "addURL", MethodType.methodType(void.class, URL.class));
-        for (String path : paths) {
-            addURLMH.invokeWithArguments(ucp, libraryDir.resolve(path).toUri().toURL());
-        }
-    }
-
     // ForgeWrapper need some extra settings to invoke BootstrapLauncher.
     public static Class<?> setupBootstrapLauncher(Class<?> mainClass) throws Throwable {
         if (!mainClass.getModule().isOpen(mainClass.getPackageName(), ModuleUtil.class.getModule())) {
